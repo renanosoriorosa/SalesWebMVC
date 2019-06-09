@@ -19,35 +19,51 @@ namespace SalesWebMvc.Services
             _context = context;
         }
 
-        public List<Seller> FindAll()
+        //sincrona
+        //public List<Seller> FindAll()
+        //{
+        //    return _context.Seller.ToList();
+        //}
+
+        // assincrona
+        public async Task<List<Seller>> FindAllAsync()
         {
-            return _context.Seller.ToList();
+            return await _context.Seller.ToListAsync();
         }
 
-        public void Insert( Seller obj)
+        //sincrona
+        //public void Insert( Seller obj)
+        //{
+        //    _context.Add(obj); // é feito em memoria
+        //    _context.SaveChanges(); // acessa o BD, nela deve ter a versao async
+        //}
+
+        // assincrona
+        public async Task InsertAsync(Seller obj)
         {
-            _context.Add(obj);
-            _context.SaveChanges();
+            _context.Add(obj); // é feito em memoria
+            await _context.SaveChangesAsync(); // acessa o BD, nela deve ter a versao async
         }
 
-        public Seller FindById(int id)
+        public async Task<Seller> FindByIdAsync(int id)
         {
             //return _context.Seller.FirstOrDefault(obj => obj.Id == id); // carrega somente o vendedor sem o department
-            return _context.Seller.Include(obj => obj.Department).FirstOrDefault(obj => obj.Id == id); // esta linha busca o vendedor e o departamento do vendedor
+            return await _context.Seller.Include(obj => obj.Department).FirstOrDefaultAsync(obj => obj.Id == id); // esta linha busca o vendedor e o departamento do vendedor
         }
 
-        public void Remove( int id)
+        public async Task  RemoveAsync( int id)
         {
-            var obj = _context.Seller.Find(id);
+            var obj = await _context.Seller.FindAsync(id);
             _context.Seller.Remove(obj);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void Update(Seller obj)
+        public async Task UpdateAsync(Seller obj)
         {
             // este if verifica se não existe algum objeto com - 
             // - este id no banco de dado
-            if (!_context.Seller.Any(x => x.Id == obj.Id))
+            bool hasAny = await _context.Seller.AnyAsync(x => x.Id == obj.Id);
+            if (!hasAny)
             {
                 throw new NotFoundException("Id not found");
             }
@@ -55,7 +71,7 @@ namespace SalesWebMvc.Services
             try
             {
                 _context.Update(obj);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException e)
             {
